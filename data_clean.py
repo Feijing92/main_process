@@ -76,7 +76,7 @@ def file_output(xs, ys, file_name):
 
 
 def table2():
-  with open('./table2.txt', 'a') as f:
+  with open('./table2.txt', 'w') as f:
     None
 
   for i, key in enumerate(file_names):
@@ -88,8 +88,8 @@ def table2():
         labels.append(int(line1[-1]))
 
     instance_num = len(labels)
-    positive_num = sum(labels)
-    negative_num = instance_num - positive_num
+    negative_num = sum(labels)
+    positive_num = instance_num - negative_num
     feature_num = len(lines[0]) - 2
 
     with open('./table2.txt', 'a') as f:
