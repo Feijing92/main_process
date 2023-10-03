@@ -673,7 +673,6 @@ if __name__ == '__main__':
   data_names = ['AID', 'HET', 'INC', 'NOD', 'LUC', 'TIT']
   subfigure_index = ['A', 'B', 'C', 'D', 'E', 'F']
   print(all_file)
-  '''
   ### figure 1, figure 2 and table 1: training set / dataset = 1
   # experiment
   fs, ppp, ixs, ems = [], [], [], []
@@ -688,7 +687,6 @@ if __name__ == '__main__':
       ixs.append(i)
       ems.append(max_training_turn)
   parallel(experiment, fs, ppp, ixs, ems)
-  '''
   # results visualization
   col_num = 3
   row_num = math.ceil(len(all_file) / col_num)
@@ -698,6 +696,6 @@ if __name__ == '__main__':
   
   ### figure 3: training set / dataset = 0.7
   # experiment
-  # parallel(bound_calculation, all_file)
+  parallel(bound_calculation, all_file)
   # results visualization
   figure3(all_file, example_index=2, example_pro=0.7, example_method=2)
