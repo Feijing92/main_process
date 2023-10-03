@@ -113,4 +113,3 @@ if __name__ == '__main__':
     data_input(key, value[0], value[1])
   
   table2()
-
