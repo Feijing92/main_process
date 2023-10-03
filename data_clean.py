@@ -75,10 +75,42 @@ def file_output(xs, ys, file_name):
       f.write(','.join([str(x) for x in data] + [str(ys[i])]) + '\n')
 
 
+def table2():
+  with open('./table2.txt', 'a') as f:
+    None
+
+  for i, key in enumerate(file_names):
+    labels = []
+    with open('./cleaned_dataset/'+key+'.csv', 'r') as f:
+      lines = f.readlines()[1:]
+      for line in lines:
+        line1 = line.strip('\n').split(',')
+        labels.append(int(line1[-1]))
+
+    instance_num = len(labels)
+    positive_num = sum(labels)
+    negative_num = instance_num - positive_num
+    feature_num = len(lines[0]) - 2
+
+    with open('./table2.txt', 'a') as f:
+      f.write('&'.join([data_names[i], str(instance_num), str(positive_num), str(negative_num), str(feature_num)]) + '\\\\\n')
+  
+
 if __name__ == '__main__':
-  data_input('airlines_delay', [0], 7)
-  data_input('heart', [0,1], 13)
-  data_input('income', [0], 14)
-  data_input('network_domain', [0], 7)
-  data_input('survey_lung_cancer', [], 15)
-  data_input('Titanic', [0,3], 1)
+  file_names = ['airlines_delay', 'heart', 'income', 'network_domain', 'survey_lung_cancer', 'Titanic']
+  data_names = ['AID', 'HET', 'INC', 'NOD', 'LUC', 'TIT']
+
+  data2para = {
+    'airlines_delay': [[0], 7],
+    'heart': [[0,1], 13],
+    'income': [[0], 14],
+    'network_domain': [[0], 7],
+    'survey_lung_cancer': [[], 15],
+    'Titanic': [[0,3], 1]
+  }
+
+  for key, value in data2para.items():
+    data_input(key, value[0], value[1])
+  
+  table2()
+
