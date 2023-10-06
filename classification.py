@@ -3,12 +3,9 @@ import xgboost as xgb
 from sklearn.neural_network import MLPClassifier
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1.inset_locator import mark_inset
-# from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
 from matplotlib.lines import Line2D
 from sklearn.metrics import average_precision_score, roc_curve, auc
-import os
 import pickle
 from scipy.special import comb
 from functools import partial

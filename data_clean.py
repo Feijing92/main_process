@@ -1,6 +1,5 @@
 import random as ran
 import numpy as np
-import os
 
 
 def data_input(file_name, id_columns, label_column, head_line=True, dot=','):
