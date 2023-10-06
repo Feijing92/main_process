@@ -669,6 +669,7 @@ if __name__ == '__main__':
   all_file = ['airlines_delay.csv', 'heart.csv', 'income.csv', 'network_domain.csv', 'survey_lung_cancer.csv', 'Titanic.csv']
   data_names = ['AID', 'HET', 'INC', 'NOD', 'LUC', 'TIT']
   subfigure_index = ['A', 'B', 'C', 'D', 'E', 'F']
+  division_radio = 0.7
   print(all_file)
   ### figure 1, figure 2 and table 1: training set / dataset = 1
   # experiment
@@ -680,7 +681,7 @@ if __name__ == '__main__':
     ems.append(max_training_turn)
     for i in range(10):
       fs.append(file)
-      ppp.append(0.7)
+      ppp.append(division_radio)
       ixs.append(i)
       ems.append(max_training_turn)
   parallel(experiment, fs, ppp, ixs, ems)
