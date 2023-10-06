@@ -1,7 +1,3 @@
-import random as ran
-import numpy as np
-
-
 def data_input(file_name, id_columns, label_column, head_line=True, dot=','):
   features, labels = [], []
   
