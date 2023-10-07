@@ -138,14 +138,19 @@ def simple_graph(links):
   components = sorted(nx.connected_components(G), reverse=True, key=lambda x: len(x))
   print(len(components), [len(x) for x in components])
 
-  G1 = G.subgraph(components[0])
-  print(G1.number_of_nodes(), G1.number_of_edges())
-  nx.write_gexf(G1, 'g1.gexf')
-  G2 = G.subgraph(components[1])
-  print(G2.number_of_nodes(), G2.number_of_edges())
-  nx.write_gexf(G2, 'g2.gexf')
+  subgraph_analysis(G.subgraph(components[0]), 'g1')
+  subgraph_analysis(G.subgraph(components[1]), 'g2')
+  
 
+def subgraph_analysis(g, name):
+  print('*' * 40)
+  print(name + ':')
+  print(g.number_of_nodes(), g.number_of_edges())
+  nx.write_gexf(g, name + '.gexf')
 
+  communities = sorted(nx.algorithms.community.greedy_modularity_communities(g), reverse=True, key=lambda x: len(x))
+  print([len(x) for x in communities])
+  print(len(communities), nx.algorithms.community.modularity(g, communities))
 
 
 if __name__ == '__main__':
