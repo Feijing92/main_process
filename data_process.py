@@ -1,5 +1,7 @@
 import os
 import json
+import networkx as nx
+import matplotlib as plt
 
 
 def json_print(json_string):
@@ -50,8 +52,6 @@ def user_data_processing(datas):
       else:
         tweets_history[key] += value
 
-  print(len(reply_relationships), len(mention_relationships), len(reference_relationships))
-
   return history_check(reply_relationships, mention_relationships, reference_relationships, tweets_history)
 
 
@@ -71,8 +71,6 @@ def tweet_data_processing(datas):
         tweets_history[key] = value
       else:
         tweets_history[key] += value
-
-  print(len(reply_relationships), len(mention_relationships), len(reference_relationships))
 
   return history_check(reply_relationships, mention_relationships, reference_relationships, tweets_history)
 
@@ -96,6 +94,8 @@ def history_check(reply, mention, reference, history):
   check(reply, history)
   check(mention, history)
   check(reference, history)
+
+  print(len(reply), len(mention), len(reference))
 
   return reply, mention, reference
 
@@ -128,8 +128,29 @@ def tweet_reading(tweet_datas):
   return mention_relationships, reply_relationships, reference_relationships, tweets_history
 
 
+def simple_graph(links):
+  new_links = list(set(links))
+  G = nx.Graph()
+  for link in new_links:
+    G.add_edge(link[0], link[1])
+  print(G.number_of_nodes(), G.number_of_edges())
+
+  components = sorted(nx.connected_components(G), reverse=True, key=lambda x: len(x))
+  print(len(components), [len(x) for x in components])
+
+  G1 = G.subgraph(components[0])
+  print(G1.number_of_nodes(), G1.number_of_edges())
+  nx.write_gexf(G1, 'g1.gexf')
+  G2 = G.subgraph(components[1])
+  print(G2.number_of_nodes(), G2.number_of_edges())
+  nx.write_gexf(G2, 'g2.gexf')
+
+
+
+
 if __name__ == '__main__':
   document = './data-leader/2019 India Climate Strikes Movement'
   users, tweets = json_read(document)
-  user_data_processing(users)
-  tweet_data_processing(tweets)
+  reply1, mention1, reference1 = user_data_processing(users)
+  reply2, mention2, reference2 = tweet_data_processing(tweets)
+  simple_graph(reply1 + mention1 + reference1 + reply2 + mention2 + reference2)
