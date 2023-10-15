@@ -130,26 +130,83 @@ def tweet_reading(tweet_datas):
 
 def simple_graph(links):
   new_links = list(set(links))
-  G = nx.Graph()
+  G = nx.DiGraph()
   for link in new_links:
     G.add_edge(link[0], link[1])
   print(G.number_of_nodes(), G.number_of_edges())
 
-  components = sorted(nx.connected_components(G), reverse=True, key=lambda x: len(x))
+  components = sorted(nx.weakly_connected_components(G), reverse=True, key=lambda x: len(x))
   print(len(components), [len(x) for x in components])
 
-  subgraph_analysis(G.subgraph(components[0]), 'g1')
-  subgraph_analysis(G.subgraph(components[1]), 'g2')
+  g1 = G.subgraph(components[0])
+  g2 = G.subgraph(components[1])
+
+  subgraph_analysis(g1, 'g1')
+  subgraph_analysis(g2, 'g2')
   
+
+def list_statistics(l):
+  lt = {}
+  for x in l:
+    if x not in lt.keys():
+      lt[x] = 1
+    else:
+      lt[x] += 1
+  return lt
+
 
 def subgraph_analysis(g, name):
   print('*' * 40)
-  print(name + ':')
-  print(g.number_of_nodes(), g.number_of_edges())
+  print(nx.is_weakly_connected(g))
+  print(name + ':', g.number_of_nodes(), g.number_of_edges())
+  strongly_components = sorted(nx.strongly_connected_components(g), reverse=True, key=lambda x: len(x))
+  print('# of strongly_components:', len(strongly_components))
+  print('frequency distritbuion of strongly_components:', list_statistics([len(xx) for xx in strongly_components]))
   nx.write_gexf(g, name + '.gexf')
 
+  core_nodes = strongly_components[0]
+  g_core = g.subgraph(core_nodes)
+  core_edges = g_core.edges()
+  print('cores:', len(core_nodes), len(core_edges))
+  node2sc = {}
+  component2layer = {}
+  for sc_index, sc in enumerate(strongly_components):
+    component2layer[sc_index] = 0
+    for node in sc:
+      node2sc[node] = sc_index
+  
+  for a, b in g.edges():
+    ca, cb = node2sc[a], node2sc[b]
+    if ca != cb:
+      component2layer[cb] = -1
+  
+  layer_num = 0
+  while True:
+    # print(component2layer)
+    for a, b in g.edges():
+      ca, cb = node2sc[a], node2sc[b]
+      if ca == cb:
+        continue
+      if component2layer[ca] == layer_num:
+        if component2layer[cb] == -1:
+          component2layer[cb] = layer_num + 1
+    
+    if min(list(component2layer.values())) == 0:
+      break
+    else:
+      layer_num += 1
+  
+  layers = max(list(component2layer.values())) + 1
+  layer_nodes = [[] for x in range(layers)]
+  for key, value in component2layer.items():
+    for node in strongly_components[key]:
+      layer_nodes[value].append(node)
+  
+  print([len(x) for x in layer_nodes], component2layer[0])
+  print(list_statistics([(component2layer[node2sc[a]], component2layer[node2sc[b]]) for a, b in g.edges()]))
+
   communities = sorted(nx.algorithms.community.greedy_modularity_communities(g), reverse=True, key=lambda x: len(x))
-  print([len(x) for x in communities])
+  print(list_statistics([len(x) for x in communities]))
   print(len(communities), nx.algorithms.community.modularity(g, communities))
 
 
