@@ -85,21 +85,21 @@ def table2():
     instance_num = len(labels)
     negative_num = sum(labels)
     positive_num = instance_num - negative_num
-    feature_num = len(lines[0]) - 2
+    feature_num = len(line1) - 2
 
     with open('./table2.txt', 'a') as f:
       f.write('&'.join([data_names[i], str(instance_num), str(positive_num), str(negative_num), str(feature_num)]) + '\\\\\n')
   
 
 if __name__ == '__main__':
-  file_names = ['airlines_delay', 'heart', 'income', 'network_domain', 'survey_lung_cancer', 'Titanic']
+  file_names = ['airlines_delay', 'heart', 'income', 'gender_classification', 'survey_lung_cancer', 'Titanic']
   data_names = ['AID', 'HET', 'INC', 'NOD', 'LUC', 'TIT']
 
   data2para = {
     'airlines_delay': [[0], 7],
     'heart': [[0,1], 13],
     'income': [[0], 14],
-    'network_domain': [[0], 7],
+    'gender_classification': [[1, 2], 7],
     'survey_lung_cancer': [[], 15],
     'Titanic': [[0,3], 1]
   }
