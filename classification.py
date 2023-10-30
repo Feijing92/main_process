@@ -577,9 +577,9 @@ def figure3(files, example_index, example_pro, example_method):
   ax1.set_xlim([0.09, 1.01])
   ax1.set_xticks([0.09]+[0.1*j for j in range(2, 10)]+[1.01])
   ax1.set_xticklabels(['0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9','1'], weight='bold', fontsize=12,fontproperties='Times New Roman')
-  ax1.set_ylim([0, 0.2])
-  ax1.set_yticks([0.05,0.1,0.15,0.2])
-  ax1.set_yticklabels(['0.05', '0.1', '0.15', '0.2'], weight='bold', fontsize=12,fontproperties='Times New Roman')
+  ax1.set_ylim([0, 0.1])
+  ax1.set_yticks([0.02,0.04,0.06,0.08,0.1])
+  ax1.set_yticklabels(['0.02', '0.04', '0.06', '0.08', '0.1'], weight='bold', fontsize=12,fontproperties='Times New Roman')
   ax1.text(-0.1, 1.025, 'D', horizontalalignment='left', verticalalignment='bottom', transform=ax1.transAxes, weight='bold', fontsize=20,fontproperties='Times New Roman')
   # sub-titles
   ax1.set_xlabel(r'$|\mathcal{S}_{t}|/|\mathcal{S}|$', fontsize=16, fontproperties='Times New Roman')
@@ -610,9 +610,9 @@ def figure3(files, example_index, example_pro, example_method):
   ax2.set_xlim([-0.01, 0.91])
   ax2.set_xticks([-0.01]+[0.1*j for j in range(1, 9)]+[0.91])
   ax2.set_xticklabels(['0', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9'], weight='bold', fontsize=12,fontproperties='Times New Roman')
-  ax2.set_ylim([0.8, 1.01])
-  ax2.set_yticks([0.85,0.9,0.95,1.01])
-  ax2.set_yticklabels(['0.85', '0.9', '0.95', '1'], weight='bold', fontsize=12,fontproperties='Times New Roman')
+  ax2.set_ylim([0.88, 1.01])
+  ax2.set_yticks([0.88,0.92,0.96,1.01])
+  ax2.set_yticklabels(['0.88', '0.92', '0.96', '1'], weight='bold', fontsize=12,fontproperties='Times New Roman')
   ax2.text(-0.1, 1.025, 'E', horizontalalignment='left', verticalalignment='bottom', transform=ax2.transAxes, weight='bold', fontsize=20,fontproperties='Times New Roman')
   # sub-titles
   ax2.set_xlabel(r'$|\mathcal{S}_{t}|$', fontsize=16, fontproperties='Times New Roman')
@@ -628,9 +628,9 @@ def figure3(files, example_index, example_pro, example_method):
   ax3.set_xlim([0.09, 0.91])
   ax3.set_xticks([0.1*j for j in range(1, 10)])
   ax3.set_xticklabels(['0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9'], weight='bold', fontsize=12,fontproperties='Times New Roman')
-  ax3.set_ylim([0, 0.017])
-  ax3.set_yticks([0,0.005,0.01,0.015])
-  ax3.set_yticklabels(['0', '0.005', '0.01', '0.015'], weight='bold', fontsize=12,fontproperties='Times New Roman')
+  ax3.set_ylim([0, 0.012])
+  ax3.set_yticks([0,0.004,0.008,0.012])
+  ax3.set_yticklabels(['0', '0.004', '0.008', '0.012'], weight='bold', fontsize=12,fontproperties='Times New Roman')
   ax3.text(-0.1, 1.025, 'F', horizontalalignment='left', verticalalignment='bottom', transform=ax3.transAxes, weight='bold', fontsize=20,fontproperties='Times New Roman')
   # sub-titles
   ax3.set_xlabel(r'$|\mathcal{S}_{t}|/|\mathcal{S}|$', fontsize=16, fontproperties='Times New Roman')
@@ -666,8 +666,8 @@ if __name__ == '__main__':
   output_document = './output'
   error_output = './bounds.txt'
   max_training_turn = 10
-  all_file = ['airlines_delay.csv', 'heart.csv', 'income.csv', 'network_domain.csv', 'survey_lung_cancer.csv', 'Titanic.csv']
-  data_names = ['AID', 'HET', 'INC', 'NOD', 'LUC', 'TIT']
+  all_file = ['airlines_delay.csv', 'heart.csv', 'income.csv', 'gender_classification.csv', 'survey_lung_cancer.csv', 'Titanic.csv']
+  data_names = ['AID', 'HET', 'INC', 'GEN', 'LUC', 'TIT']
   subfigure_index = ['A', 'B', 'C', 'D', 'E', 'F']
   division_radio = 0.7
   print(all_file)
