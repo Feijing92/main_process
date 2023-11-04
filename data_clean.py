@@ -93,7 +93,7 @@ def table2():
 
 if __name__ == '__main__':
   file_names = ['airlines_delay', 'heart', 'income', 'gender_classification', 'survey_lung_cancer', 'Titanic']
-  data_names = ['AID', 'HET', 'INC', 'NOD', 'LUC', 'TIT']
+  data_names = ['AID', 'HET', 'INC', 'GEN', 'LUC', 'TIT']
 
   data2para = {
     'airlines_delay': [[0], 7],

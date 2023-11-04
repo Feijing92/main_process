@@ -114,7 +114,7 @@ class Data:
   def theoretical_error(self):
     self.dataset_input()
     all_p = [round(0.1*i, 1) for i in range(11)]
-    if len(self.data) > 3000:
+    if len(self.data) > 6000:
       sampling = 20
     else:
       sampling = 200
@@ -123,21 +123,29 @@ class Data:
     theoretical_results = []
     for p in all_p:
       result = [0, 0, 0]
-      for value in self.original_feature_distribution.values():
-        total_n, total_p = value
-        for turn in range(sampling):
-          a, b = 0, 0
+      for turn in range(sampling):
+        a = 0
+        k1, k2, k3 = 0, 0, 0
+        for value in self.original_feature_distribution.values():
+          total_n, total_p = value
+          a1, b1 = 0, 0
           for i in range(total_p):
             if ran.random() < p:
-              a += 1
+              a1 += 1
           for i in range(total_n):
             if ran.random() < p:
-              b += 1
+              b1 += 1
+          a += a1 + b1
           if p > all_p[0]:
-            result[0] += min(a, b) / (m*p)
+            k1 += min(a1, b1)
           if p < all_p[-1]:
-            result[1] += max(total_p-a, total_n-b) / (m*(1-p))
-          result[2] += (max(a, b) + max(total_p-a, total_n-b) - max(total_n, total_p)) / m
+            k2 += max(total_p-a1, total_n-b1)
+          k3 += (max(a1, b1) + max(total_p-a1, total_n-b1) - max(total_n, total_p))
+        if p > all_p[0]:
+          result[0] += k1 / a
+        if p < all_p[-1]:
+          result[1] += k2 / (m - a)
+        result[2] += k3 / m
       theoretical_results.append([r / sampling for r in result])
     
     simulation_results = []
@@ -436,8 +444,8 @@ def figure3(files, example_index, example_pro, example_method):
   x = list(range(1, method_num))
   xx1 = [np.average(xx) for xx in hls]
   xx2 = [np.average(xx) for xx in acs]
-  ax.bar(x, [xx / m for xx in xx1[:-1]], label=r'$\Delta_{\mathcal{S}_p}$',color=palette(4))
-  ax.bar(x, [xx / m for xx in xx2[:-1]], bottom=[xx / m for xx in xx1[:-1]], label=r'$\Delta_{\mathcal{S}_t}$',color=palette(3))
+  ax.bar(x, [xx / m for xx in xx1[:-1]], label=r'$\Delta_{test}$',color=palette(4))
+  ax.bar(x, [xx / m for xx in xx2[:-1]], bottom=[xx / m for xx in xx1[:-1]], label=r'$\Delta_{train}$',color=palette(3))
   line, = ax.plot([0, method_num], [upper_error, upper_error], linewidth=4,color='gray')
   line.set_dashes((2,2))
   yl = 0.15
@@ -474,8 +482,8 @@ def figure3(files, example_index, example_pro, example_method):
   ax.set_xticks([0.02,0.04,0.06,0.08,0.1])
   ax.set_yticklabels(['0', '0.04', '0.08','0.12'], weight='bold', fontsize=12,fontproperties='Times New Roman')
   ax.set_xticklabels(['0.02', '0.04', '0.06', '0.08','0.1'], weight='bold', fontsize=12,fontproperties='Times New Roman')
-  ax.set_ylabel(r'$\Delta_{\mathcal{S}_p}  $', fontsize=16, fontproperties='Times New Roman')
-  ax.set_xlabel(r'$\Delta_{\mathcal{S}_t}  $', fontsize=16, fontproperties='Times New Roman')
+  ax.set_ylabel(r'$\Delta_{test}  $', fontsize=16, fontproperties='Times New Roman')
+  ax.set_xlabel(r'$\Delta_{train}  $', fontsize=16, fontproperties='Times New Roman')
   ax.text(-0.1, 1.025, 'B', horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes, weight='bold', fontsize=20,fontproperties='Times New Roman')
   legend_elements = [Line2D([0], [0], marker='o', color=palette(color_indices[i]), label=method_names[i], markersize=12,lw=0) for i in range(method_num-1)]
   ax.text(0.1, 0.85, data_names[example_index], horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes, weight='bold', fontsize=20,fontproperties='Times New Roman')
@@ -539,8 +547,8 @@ def figure3(files, example_index, example_pro, example_method):
   ax.set_xticks([0.2,0.4,0.6,1.01*xl])
   ax.set_yticklabels(['0', '0.1', '0.2', '0.3'], weight='bold', fontsize=12,fontproperties='Times New Roman')
   ax.set_xticklabels(['0.2', '0.4', '0.6', '0.8'], weight='bold', fontsize=12,fontproperties='Times New Roman')
-  ax.set_ylabel(r'$\Delta_{\mathcal{S}_p} $', fontsize=16, fontproperties='Times New Roman')
-  ax.set_xlabel(r'$\Delta_{\mathcal{S}_t}  $', fontsize=16, fontproperties='Times New Roman')
+  ax.set_ylabel(r'$\Delta_{test} $', fontsize=16, fontproperties='Times New Roman')
+  ax.set_xlabel(r'$\Delta_{train}  $', fontsize=16, fontproperties='Times New Roman')
   # ax.text(0.45, 0.85, method_names[example_method], transform=ax.transAxes, weight='bold', fontsize=20,fontproperties='Times New Roman')
   ax.text(-0.1, 1.025, 'C', horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes, weight='bold', fontsize=20,fontproperties='Times New Roman')
   legend_elements = [Line2D([0], [0], marker='o', color=palette(color_indices[i]), label=p, markersize=12,lw=4) for i, p in enumerate(ps[:-2])] + [Line2D([0], [0], marker='o', color=palette1(8), label=0.8, markersize=12,lw=4)] + [Line2D([0], [0], marker='o', color=palette1(9), label=0.9, markersize=12,lw=4)]
@@ -582,7 +590,7 @@ def figure3(files, example_index, example_pro, example_method):
   ax1.set_yticklabels(['0.02', '0.04', '0.06', '0.08', '0.1'], weight='bold', fontsize=12,fontproperties='Times New Roman')
   ax1.text(-0.1, 1.025, 'D', horizontalalignment='left', verticalalignment='bottom', transform=ax1.transAxes, weight='bold', fontsize=20,fontproperties='Times New Roman')
   # sub-titles
-  ax1.set_xlabel(r'$|\mathcal{S}_{t}|/|\mathcal{S}|$', fontsize=16, fontproperties='Times New Roman')
+  ax1.set_xlabel(r'$|\mathcal{S}_{train}|/|\mathcal{S}|$', fontsize=16, fontproperties='Times New Roman')
   ax1.set_ylabel('minimum hinge loss', fontsize=16, fontproperties='Times New Roman')
   legend_elements = [Line2D([0], [0], marker=markers[i], color=palette(color_indices[i]), label=data_names[i], markersize=12,lw=4) for i in range(6)]
   # ax1.legend(handles=legend_elements, loc="upper left", bbox_to_anchor=(0.05,0.95), fontsize=12, frameon=False, prop=font1, ncol=2)
@@ -591,12 +599,12 @@ def figure3(files, example_index, example_pro, example_method):
   for i in range(6):
     if i in ins_set:
       continue
-    result = results[i][1]
+    result = results[i][0]
     plt.plot([0]+ps, [min(x[1],1) for x in result[:-1]],markers[i]+'-', color=palette(color_indices[i]), linewidth=4, alpha=0.9, markersize=12)
 
   ax_ins = inset_axes(ax2, loc='lower right', width="30%",  height="30%")
   for i in ins_set:
-    result = results[i][1]
+    result = results[i][0]
     plt.plot([0]+ps, [min(x[1],1) for x in result[:-1]],markers[i]+'-', color=palette(color_indices[i]), linewidth=4, alpha=0.9, markersize=6)
 
   ax_ins.xaxis.tick_top()
@@ -615,7 +623,7 @@ def figure3(files, example_index, example_pro, example_method):
   ax2.set_yticklabels(['0.88', '0.92', '0.96', '1'], weight='bold', fontsize=12,fontproperties='Times New Roman')
   ax2.text(-0.1, 1.025, 'E', horizontalalignment='left', verticalalignment='bottom', transform=ax2.transAxes, weight='bold', fontsize=20,fontproperties='Times New Roman')
   # sub-titles
-  ax2.set_xlabel(r'$|\mathcal{S}_{t}|$', fontsize=16, fontproperties='Times New Roman')
+  ax2.set_xlabel(r'$|\mathcal{S}_{train}| / |\mathcal{S}|$', fontsize=16, fontproperties='Times New Roman')
   ax2.set_ylabel(r'$\mathrm{AC}^u$', fontsize=16, fontproperties='Times New Roman')
   ax2.legend(handles=legend_elements, loc="lower left", bbox_to_anchor=(0.05,0.05), fontsize=12, frameon=False, prop=font1, ncol=2)
 
@@ -633,7 +641,7 @@ def figure3(files, example_index, example_pro, example_method):
   ax3.set_yticklabels(['0', '0.004', '0.008', '0.012'], weight='bold', fontsize=12,fontproperties='Times New Roman')
   ax3.text(-0.1, 1.025, 'F', horizontalalignment='left', verticalalignment='bottom', transform=ax3.transAxes, weight='bold', fontsize=20,fontproperties='Times New Roman')
   # sub-titles
-  ax3.set_xlabel(r'$|\mathcal{S}_{t}|/|\mathcal{S}|$', fontsize=16, fontproperties='Times New Roman')
+  ax3.set_xlabel(r'$|\mathcal{S}_{train}|/|\mathcal{S}|$', fontsize=16, fontproperties='Times New Roman')
   ax3.set_ylabel(r'$\Delta$', fontsize=16, fontproperties='Times New Roman')
   # ax3.legend(handles=legend_elements, loc="lower center", bbox_to_anchor=(0.5,0.05), fontsize=12, frameon=False, prop=font1, ncol=2)
 
@@ -684,7 +692,7 @@ if __name__ == '__main__':
       ppp.append(division_radio)
       ixs.append(i)
       ems.append(max_training_turn)
-  parallel(experiment, fs, ppp, ixs, ems)
+  # parallel(experiment, fs, ppp, ixs, ems)
   # results visualization
   col_num = 3
   row_num = math.ceil(len(all_file) / col_num)
@@ -694,6 +702,6 @@ if __name__ == '__main__':
   
   ### figure 3: training set / dataset = 0.7
   # experiment
-  parallel(bound_calculation, all_file)
+  # parallel(bound_calculation, all_file)
   # results visualization
   figure3(all_file, example_index=2, example_pro=0.7, example_method=2)
