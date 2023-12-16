@@ -13,6 +13,7 @@ from pathos.pools import ProcessPool, ThreadPool
 from tqdm import tqdm
 import time
 import math
+import os
 
 
 
@@ -42,8 +43,8 @@ def parallel(func, *args, show=False, thread=False, **kwargs):
 
 class Data:
 
-  def __init__(self, file_name, division):
-    self.file_path = './cleaned_dataset/' + file_name
+  def __init__(self, file_path, file_name, division):
+    self.file_path = file_path
     self.file_name = file_name
     self.division = division
 
@@ -52,11 +53,12 @@ class Data:
     self.label = []
 
     with open(self.file_path) as f:
-      lines = f.readlines()[1:]
+      lines = f.readlines()
       for line in lines:
         new_line = line.strip('\n').split(',')
-        self.data.append([int(x) for x in new_line[1:-1]])
-        self.label.append(int(new_line[-1]))
+        # print(new_line)
+        self.data.append([int(x) for x in new_line[:-2]])
+        self.label.append(int(new_line[-2]))
     
     self.all_features = []
     for x in self.data:
@@ -71,6 +73,7 @@ class Data:
 
   def dataset_division(self):
     self.dataset_input()
+    print('input is ready!')
     self.divided_feature_distribution = dict(zip(list(range(len(self.all_features))), [[0, 0, 0, 0] for x in self.all_features]))
     self.xtrain, self.ytrain, self.xtest, self.ytest = [], [], [], []
     for key, value in self.original_feature_distribution.items():
@@ -187,17 +190,21 @@ class Data:
 
   def training_and_prediction(self, training_turn_max):
     optimal_pred = self.feature_construction()
-    error_bound_num = self.error_bound()
-    min_hinge = self.min_hinge_loss()
+
     x1, y1 = len(self.xtrain), len(self.xtest)
-    if self.division < 1:
-      max_accuracy = self.max_accuracy()
-    else:
-      max_accuracy = self.max_accuracy(only_train=True)
     n_positive = sum(self.label)
     n_negative = len(self.label) - n_positive
     features_num = len(self.data[0])
     print(self.file_name+':', x1, y1, n_positive, n_negative, features_num, self.division)
+
+    error_bound_num = self.error_bound()
+    min_hinge = self.min_hinge_loss()
+    
+    if self.division < 1:
+      max_accuracy = self.max_accuracy()
+    else:
+      max_accuracy = self.max_accuracy(only_train=True)
+
     output_results = [error_bound_num, x1, y1, min_hinge, max_accuracy]
     all_train_pred = [self.ytrain]
     all_test_pred = [self.ytest]
@@ -273,13 +280,31 @@ def discrete_classifier_hinge_accuracy(y_train, train_pred, y_test, test_pred):
 
 
 def experiment(file, pp, ix, t):
-  dataset = Data(file, pp)
+  dataset = Data('./cleaned_dataset/' + file, file, pp)
   result = dataset.training_and_prediction(t)  
   basics, train_preds, test_preds = result
 
   n, max_acc = basics[1], basics[-1]
   print(file, pp, ix)
   print('max acc:', max_acc/n)
+  with open(output_document + '/' + file + '_' + str(pp) + '_' + str(ix) + '_' + str(t) + '.txt', 'wb') as f:
+    pickle.dump(result, f)
+
+
+def uc_experiment(file, pp, ix, t):
+  dataset = Data('./cleaned_UC_dataset/' + file, file, pp)
+  result = dataset.training_and_prediction(t)  
+  basics, train_preds, test_preds = result
+  n, max_acc = basics[1], basics[-1]
+  print(file, pp, ix)
+  print('max acc:', max_acc/n)
+  y_label = train_preds[0]
+  for j, y in enumerate(train_preds[1:]):
+    fpr1, tpr1, thresholds1 = roc_curve(y_label, y, pos_label=1)
+    roc_auc = auc(fpr1, tpr1)
+    print(roc_auc)
+  print('*' * 40)
+  
   with open(output_document + '/' + file + '_' + str(pp) + '_' + str(ix) + '_' + str(t) + '.txt', 'wb') as f:
     pickle.dump(result, f)
 
@@ -297,7 +322,7 @@ def figure1(files, h1, h2, et):
     with open(output_document + '/' + file + '_1_0_' + str(et)+ '.txt', 'rb') as f1:
       result = pickle.load(f1)
     
-    basics, train_preds, test_preds = result
+    basics, train_preds, test_preds = result[:3]
     ax = plt.subplot(h1,h2,i+1)
     y_label = train_preds[0]
     for j, y in enumerate(train_preds[1:]):
@@ -320,11 +345,11 @@ def figure1(files, h1, h2, et):
     ax.set_ylim([-0.02, 1.02])
     ax.set_xticks([-0.02, 0.2, 0.4, 0.6, 0.8, 1.02])
     ax.set_yticks([-0.02, 0.2, 0.4, 0.6, 0.8, 1.02])
-    if i in [3,4,5]:
+    if i in [2,3]:
       ax.set_xticklabels(['0', '0.2', '0.4', '0.6', '0.8', '1'], weight='bold', fontsize=12,fontproperties='Times New Roman')
     else:
       ax.xaxis.set_major_formatter(plt.NullFormatter())
-    if i in [0,3]:
+    if i in [0,2]:
       ax.set_yticklabels(['0', '0.2', '0.4', '0.6', '0.8', '1'], weight='bold', fontsize=12,fontproperties='Times New Roman')
     else:
       ax.yaxis.set_major_formatter(plt.NullFormatter())
@@ -349,7 +374,7 @@ def figure2(files, h1, h2, et):
 
   for i, file in enumerate(files):
     with open(output_document + '/' + file + '_1_0_' + str(et)+ '.txt', 'rb') as f1:
-      basics, train_preds, test_preds = pickle.load(f1)
+      basics, train_preds, test_preds = pickle.load(f1)[:3]
 
     ax = plt.subplot(h1,h2,i+1)
     label = train_preds[0]
@@ -367,11 +392,11 @@ def figure2(files, h1, h2, et):
     ax.set_ylim([-0.02, 1.02])
     ax.set_xticks([-0.02, 0.2, 0.4, 0.6, 0.8, 1.02])
     ax.set_yticks([-0.02, 0.2, 0.4, 0.6, 0.8, 1.02])
-    if i in [3,4,5]:
+    if i in [2,3]:
       ax.set_xticklabels(['0', '0.2', '0.4', '0.6', '0.8', '1'], weight='bold', fontsize=12,fontproperties='Times New Roman')
     else:
       ax.xaxis.set_major_formatter(plt.NullFormatter())
-    if i in [0,3]:
+    if i in [0,2]:
       ax.set_yticklabels(['0', '0.2', '0.4', '0.6', '0.8', '1'], weight='bold', fontsize=12,fontproperties='Times New Roman')
     else:
       ax.yaxis.set_major_formatter(plt.NullFormatter())
@@ -649,7 +674,14 @@ def figure3(files, example_index, example_pro, example_method):
 
 
 def bound_calculation(file):
-  dataset = Data(file, 0.5)
+  dataset = Data('./cleaned_dataset/' + file, file, 0.5)
+  bound = dataset.theoretical_error()
+  with open('./bounds_'+file, 'wb') as f:
+    pickle.dump(bound, f)
+
+
+def uc_bound_calculation(file):
+  dataset = Data('./cleaned_UC_dataset/' + file, file, 0.5)
   bound = dataset.theoretical_error()
   with open('./bounds_'+file, 'wb') as f:
     pickle.dump(bound, f)
@@ -666,6 +698,74 @@ def table1(ar, ap, ac):
       f.write('&'.join(['~', 'AC'] + [str(round(x, 4)) for x in acc ])+'\\\\\n\\hline\n')
 
 
+def figureS1(j1, ys):
+  fig = plt.figure(figsize=(16,16))
+  plt.subplots_adjust(left=0.05,bottom=0.05,top=0.9,right=0.95,hspace=0.35,wspace=0.2)
+  palette = plt.get_cmap('Set3')
+  plt.rcParams['xtick.direction'] = 'in'
+  plt.rcParams['ytick.direction'] = 'in'
+  all_pros = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  method_num = len(method_names)
+  labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
+  file = all_file[j1]
+  
+  for i1, example_pro in enumerate(all_pros):
+
+    hls, acs = [[] for i in range(method_num)], [[] for i in range(method_num)]
+    deltas = []
+    for t in range(10):
+      try:
+        with open(output_document + '/' + file + '_'+str(example_pro)+'_'+str(t)+'_' + str(max_training_turn) + '.txt', 'rb') as f1:
+          basics, train_preds, test_preds = pickle.load(f1)
+      except:
+        continue
+      error_bound, train_num,test_num, hinge1, accuracy1 = basics
+      deltas.append(error_bound)
+      for i in range(1, len(test_preds)):
+        if i < 3:
+          ha = continuous_classifier_hinge_accuracy(train_preds[0], train_preds[i], test_preds[0], test_preds[i])
+        else:
+          ha = discrete_classifier_hinge_accuracy(train_preds[0], train_preds[i], test_preds[0], test_preds[i])
+        hls[i-1].append(abs(ha[0] - hinge1))
+        acs[i-1].append(abs(ha[1] - accuracy1))
+    
+    c1, c2 = i1 // 3, i1 % 3 
+    ax = plt.subplot2grid((3, 3), (c1, c2), rowspan=1, colspan=1)
+    # ax.tick_params(bottom=False, top=False, right=False)
+    m = train_num + test_num
+    upper_error = np.average(deltas) / m
+    x = list(range(1, method_num))
+    xx1 = [np.average(xx) for xx in hls]
+    xx2 = [np.average(xx) for xx in acs]
+    ax.bar(x, [xx / m for xx in xx1[:-1]], label=r'$\Delta_{\text{test}}$',color=palette(4))
+    ax.bar(x, [xx / m for xx in xx2[:-1]], bottom=[xx / m for xx in xx1[:-1]], label=r'$\Delta_{\text{train}}$',color=palette(3))
+    line, = ax.plot([0, method_num], [upper_error, upper_error], linewidth=4,color='gray')
+    line.set_dashes((2,2))
+
+    ax.set_ylim([0, ys[-1]])
+    ax.set_yticks(ys)
+    ax.set_xlim([0, method_num])
+    ax.set_xticks(x)
+    
+    # ax.set_ylabel(r'$\Delta$', fontsize=16, fontproperties='Times New Roman')
+    ax.text(-0.1, 1.025, labels[i1], horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes, fontsize=20, weight='bold',fontproperties='Times New Roman')
+    if i1 == 0:
+      ax.legend(loc="upper left", fontsize=20, frameon=False, weight='bold',fontproperties='Times New Roman')
+    ax.text(0.95, 0.95, 'p='+str(example_pro), horizontalalignment='right', verticalalignment='top', transform=ax.transAxes, weight='bold', fontsize=16,fontproperties='Times New Roman')
+
+    if c2 == 0:
+      ax.set_yticklabels([str(yy) for yy in ys], weight='bold', fontsize=12,fontproperties='Times New Roman')
+    else:
+      ax.yaxis.set_major_formatter(plt.NullFormatter())
+    if c1 == 2:
+      ax.set_xticklabels(method_names[:-1], weight='bold', fontsize=16,fontproperties='Times New Roman', rotation=30, ha='right')
+    else:
+      ax.xaxis.set_major_formatter(plt.NullFormatter())
+
+  fig.text(-0.02, 0.5, r'$\Delta$', va='center', rotation='vertical', fontsize=40,weight='bold',fontproperties='Times New Roman')
+  plt.savefig('./figS' + str(j1 + 1) + '.jpg', bbox_inches='tight', dpi=600)
+
+
 if __name__ == '__main__':
   # parameters setting
   method_names = ['XGBoost+square', 'XGBoost+logistic', 'XGBoost+hinge', 'XGBoost+softmax', 'MLP', 'optimal']
@@ -674,34 +774,47 @@ if __name__ == '__main__':
   output_document = './output'
   error_output = './bounds.txt'
   max_training_turn = 10
-  all_file = ['airlines_delay.csv', 'heart.csv', 'income.csv', 'gender_classification.csv', 'survey_lung_cancer.csv', 'Titanic.csv']
-  data_names = ['AID', 'HET', 'INC', 'GEN', 'LUC', 'TIT']
-  subfigure_index = ['A', 'B', 'C', 'D', 'E', 'F']
+  all_file = ['airlines.csv', 'heart.csv', 'income_evaluation.csv', 'SleepStudyData.csv']
+  data_names = ['AID', 'HED', 'INE', 'STS']
+  subfigure_index = ['A', 'B', 'C', 'D']
   division_radio = 0.7
   print(all_file)
   ### figure 1, figure 2 and table 1: training set / dataset = 1
   # experiment
-  fs, ppp, ixs, ems = [], [], [], []
-  for file in all_file:
-    fs.append(file)
-    ppp.append(1)
-    ixs.append(0)
-    ems.append(max_training_turn)
-    for i in range(10):
-      fs.append(file)
-      ppp.append(division_radio)
-      ixs.append(i)
-      ems.append(max_training_turn)
+  # experiment(all_file[1], 1, 0, max_training_turn)
+  # for file in all_file:
+  #   experiment(file, 1, 0, max_training_turn)
+  # fs, ppp, ixs, ems = [], [], [], []
+  # for file in all_file:
+  #   for i in range(10):
+  #     for p in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
+  #       fs.append(file)
+  #       ppp.append(p)
+  #       ixs.append(i)
+  #       ems.append(max_training_turn)
   # parallel(experiment, fs, ppp, ixs, ems)
+  
   # results visualization
-  col_num = 3
-  row_num = math.ceil(len(all_file) / col_num)
-  ar, ac = figure1(all_file, row_num, col_num, max_training_turn)
-  ap = figure2(all_file, row_num, col_num, max_training_turn)
-  table1(ar, ap, ac)
+  # col_num = 2
+  # row_num = 2
+  # ar, ac = figure1(all_file, row_num, col_num, max_training_turn)
+  # ap = figure2(all_file, row_num, col_num, max_training_turn)
+  # table1(ar, ap, ac)
   
   ### figure 3: training set / dataset = 0.7
   # experiment
-  # parallel(bound_calculation, all_file)
+  for file in all_file:
+    bound_calculation(file)
+
   # results visualization
-  figure3(all_file, example_index=2, example_pro=0.7, example_method=2)
+  # figure3(all_file, example_index=2, example_pro=0.7, example_method=2)
+
+  # figureS1(0, [0, 0.02, 0.04, 0.06, 0.08])
+  # figureS1(1, [0, 0.01, 0.02, 0.03, 0.04, 0.05])
+  # figureS1(2, [0, 0.05, 0.1, 0.15])
+  # figureS1(3, [0, 0.002, 0.004, 0.006, 0.008, 0.01])
+  # figureS1(4, [0, 0.1, 0.2, 0.3])
+  # figureS1(5, [0, 0.1, 0.2, 0.3, 0.4, 0.5])
+
+  # for file in list(os.listdir('./cleaned_UC_dataset')):
+  #   uc_experiment(file, 1, 0, max_training_turn)
